@@ -1,0 +1,10 @@
+{
+  "name": "learn-react",
+  "version": "1.0.0",
+  "description": "learn react note",
+  "main": "index.js",
+  "repository": "git@github.com:DreamerKing/react.git",
+  "author": "King <dreamingking@live.cn>",
+  "license": "MIT",
+  "private": true
+}
