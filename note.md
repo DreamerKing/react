@@ -174,3 +174,83 @@ createPortal(child, container)
 Profiler
 测量一个 React 应用多久渲染一次以及渲染一次的“代价”。
 它的目的是识别出应用中渲染较慢的部分，或是可以使用类似 memoization 优化的部分，并从相关优化中获益。
+
+refs
+
+createRef()
+
+几个适合使用 refs 的情况：
+
+1. 管理焦点，文本选择或媒体播放。
+2. 触发强制动画。
+3. 集成第三方 DOM 库。
+
+避免使用 refs 来做任何可以通过声明式实现来完成的事情。
+
+ref 的值根据节点的类型而有所不同：
+
+- 当 ref 属性用于 HTML 元素时，构造函数中使用 React.createRef() 创建的 ref 接收底层 DOM 元素作为其 current 属性。
+- 当 ref 属性用于自定义 class 组件时，ref 对象接收组件的挂载实例作为其 current 属性。
+- 不能在函数组件上使用 ref 属性，因为他们没有实例。
+  useRef() forwardRef() useImperativeHandle()
+
+回调 Refs
+它能助你更精细地控制何时 refs 被设置和解除。
+
+与 class 组件中的 setState 方法不同，useState 不会自动合并更新对象。
+
+React Hook
+Eeffect Hook 可以在函数组件中执行副作用操作
+useEffect 相当于 componentDidMount，componentDidUpdate 和 componentWillUnmount 这三个函数的组合。
+在 React 组件中有两种常见副作用操作：需要清除的和不需要清除的。
+在 React 更新 DOM 之后运行一些额外的代码。比如发送网络请求，手动变更 DOM，记录日志，这些都是常见的无需清除的操作。
+useEffect 做了什么? 通过使用这个 Hook，可以告诉 React 组件需要在`渲染后执行某些操作`。当 React 渲染组件时，`会保存已使用的 effect`，并且在`更新DOM完之后调用它`。这个过程在每次渲染时都会发生，包括首次渲染。
+为什么要在函数组件内部调用 useEffect? 将 useEffect 放在组件内部可以在 effect 中`直接访问 state 变量（或其他 props）` —— 已保存在函数作用域中。Hook 使用了 JavaScript 的闭包机制，而不用在 JavaScript 已经提供了解决方案的情况下，还引入特定的 React API。
+useEffect 会在每次渲染后执行吗? 是的，默认情况下，它在第一次渲染之后和每次更新之后都会执行。不用再去考虑“挂载”还是“更新”。React 保证了每次运行 effect 的同时，DOM 都已经更新完毕。每个 effect “属于”一次特定的渲染。
+
+与 componentDidMount 或 componentDidUpdate 不同，使用 useEffect 调度的 effect 不会阻塞浏览器更新屏幕，这让应用看起来响应更快。大多数情况下，effect 不需要同步地执行。在个别情况下（例如测量布局），有单独的 useLayoutEffect Hook 供你使用，其 API 与 useEffect 相同。
+
+需要清除的 effect 如订阅外部数据源。这种情况下，清除工作是非常重要的，可以防止引起内存泄露。
+在 React class 中，你通常会在 componentDidMount 中设置订阅，并在 componentWillUnmount 中清除它。使用生命周期函数迫使我们拆分这些逻辑代码，即使这两部分代码都作用于相同的副作用。
+
+为什么要在 effect 中返回一个函数？ 这是 effect 可选的清除机制。每个 effect 都可以返回一个清除函数。如此可以将添加和移除订阅的逻辑放在一起。它们都属于 effect 的一部分。
+
+React 何时清除 effect？ React 会在组件卸载的时候执行清除操作。effect 在每次渲染的时候都会执行。这就是为什么 React 会在执行当前 effect 之前对上一个 effect 进行清除。有些副作用可能需要清除，所以需要返回一个函数。
+
+为什么每次更新的时候都要运行 Effect?
+可能会因为忘记正确地处理 componentDidUpdate 导致内存泄露或崩溃的问题。
+useEffect 并不会受到影响。Eeffect 并不需要特定的代码来处理更新逻辑，因为 useEffect 默认就会处理。它会在调用一个新的 effect 之前对前一个 effect 进行清理。此默认行为保证了一致性，避免了在 class 组件中因为没有处理更新逻辑而导致常见的 bug。
+
+- 使用多个 Effect 实现关注点分离
+  使用 Hook 其中一个目的就是要解决 class 中生命周期函数经常包含不相关的逻辑，但又把相关逻辑分离到了几个不同方法中的问题。Hook 允许我们按照代码的用途分离他们， 而不是像生命周期函数那样。React 将按照 effect 声明的顺序依次调用组件中的每一个 effect。
+- 通过跳过 Effect 进行性能优化
+  在某些情况下，每次渲染后都执行清理或者执行 effect 可能会导致性能问题。在 class 组件中，可以通过在 componentDidUpdate 中添加对 prevProps 或 prevState 的比较逻辑解决。
+  如果某些特定值在两次重渲染之间没有发生变化，可以通知 React 跳过对 effect 的调用，只要传递数组作为 useEffect 的第二个可选参数即可。如果数组中有多个元素，即使只有一个元素发生变化，React 也会执行 effect。
+
+确保数组中包含了所有外部作用域中会随时间变化并且在 effect 中使用的变量，否则你的代码会引用到先前渲染中的旧变量。
+
+启用 eslint-plugin-react-hooks 中的 exhaustive-deps 规则。此规则会在添加错误依赖时发出警告并给出修复建议。
+
+Hook 使用规则
+Hook 本质就是 JavaScript 函数，但是在使用它时需要遵循两条规则。
+
+- 只在最顶层使用 Hook
+  不要在循环，条件或嵌套函数中调用 Hook， 确保总是在你的 React 函数的最顶层以及任何 return 之前调用他们。遵守这条规则，你就能确保 Hook 在每一次渲染中都按照同样的顺序被调用。这让 React 能够在多次的 useState 和 useEffect 调用之间保持 hook 状态的正确。
+
+- 只在 React 函数中调用 Hook 或自定义 Hook 中调用其他 Hook。
+  不要在普通的 JavaScript 函数中调用 Hook。遵循此规则，确保组件的状态逻辑在代码中清晰可见。
+
+React 怎么知道哪个 state 对应哪个 useState？ React 靠的是 Hook 调用的顺序。Hook 的调用顺序在每次渲染中都是相同的，所以它能够正常工作。只要 Hook 的调用顺序在多次渲染之间保持一致，React 就能正确地将内部 state 和对应的 Hook 进行关联。如果我们想要有条件地执行一个 effect，可以将判断放到 Hook 的内部。
+
+在 React 中有两种流行的方式来共享组件之间的状态逻辑: render props 和高阶组件。
+
+自定义 Hook 是一个函数，其名称以 “use” 开头，函数内部可以调用其他的 Hook。自定义 Hook 是一种自然遵循 Hook 设计的约定，而并不是 React 的特性。
+与 React 组件不同的是，自定义 Hook 不需要具有特殊的标识。我们可以自由的决定它的参数是什么，以及它应该返回什么。自定义 Hook 是一种重用状态逻辑的机制，所以每次使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的。
+
+useReducer 是另一种可选方案，它更适合用于管理包含多个子值的 state 对象。
+
+惰性初始 state
+initialState 参数只会在组件的初始渲染中起作用，后续渲染时会被忽略。如果初始 state 需要通过复杂计算获得，则可以传入一个函数，在函数中计算并返回初始的 state，此函数只在初始渲染时被调用。
+
+跳过 state 更新
+调用 State Hook 的更新函数并传入当前的 state 时，React 将跳过子组件的渲染及 effect 的执行。

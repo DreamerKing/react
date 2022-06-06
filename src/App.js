@@ -5,6 +5,7 @@ import React, { Component, Profiler } from 'react';
 import HelloReact from './components/HelloReact';
 import Todo from './components/Todo';
 import ListOfTenThings from './components/Repeat';
+import Test from './components/Test';
 
 
 /* ref.current.addEventListener('click', () => {
@@ -39,6 +40,7 @@ class App extends Component {
           {this.state.btnText}
         </WrapFancyButton>
         <div>{'>'} {0} {'<'} </div>
+        <Test name="King" />
         {/* <HelloReact name="King" /> */}
         {/* <Todo></Todo> */}
       </div>
