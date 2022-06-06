@@ -1,7 +1,6 @@
 import { Component } from 'react';
-import PropTypes from 'prop-types'
 
-export default class HelloReact extends Component {
+export default class Hello extends Component {
     constructor(props) {
         super(props);
         this.state = {
