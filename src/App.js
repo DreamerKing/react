@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Test from './components/BlickRender';
+import Test from './components/Cat';
 
 
 
