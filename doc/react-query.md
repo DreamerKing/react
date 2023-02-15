@@ -17,3 +17,36 @@ yarn add @tanstack/react-query-devtools
 
 GraphQL-Codegen
 graphql-request
+
+Query 实例默认缓冲是不新鲜的 staleTime
+
+Query Result
+
+- isLoading
+- isError
+- isSuccess
+- data
+- error
+- status loading|error|success
+- fetchStatus fetching|paused|idle
+- isFetching
+- isPaused
+
+Query Keys
+Query Functions
+
+QueryFunctionContext
+
+- queryKey
+- pageParam
+- meta
+
+Network Mode
+
+- online
+- always
+- offlineFirst
+
+useQuery()
+useInfiniteQuery()
+useQueries()
