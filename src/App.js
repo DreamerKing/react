@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Test from './components/Cat';
+import Test from './components/TestSetState2';
 
 
 
