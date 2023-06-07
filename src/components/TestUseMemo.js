@@ -11,19 +11,19 @@ export default function TestUseMemo() {
         setM(m + 2);
     }
 
-    /* const onClickChild = () => {
-        console.log('onClickChild');
-    } */
+    /*  const onClickChild = () => {
+         console.log('onClickChild');
+     } */
 
-    /*   const onClickChild = useMemo(() => {
-          return () => {
-              console.log('onClickChild');
-          };
-      }, [m]); */
-
-    const onClickChild = useCallback(() => {
-        console.log('onClickChild');
+    const onClickChild = useMemo(() => {
+        return () => {
+            console.log('onClickChild');
+        };
     }, [m]);
+
+    /* const onClickChild = useCallback(() => {
+        console.log('onClickChild');
+    }, [m]); */
 
 
     return (
@@ -40,9 +40,11 @@ export default function TestUseMemo() {
 
 /* function Child(props) {
     console.log("child 执行了");
-    return <div>child: {props.data}</div>;
-}
- */
+    return <div onClick={props.onClick}>child: {props.data}</div>;
+} */
+
+
+
 const Child = memo((props) => {
     console.log("child 执行了");
     return <div onClick={props.onClick}>child: {props.data}</div>;
