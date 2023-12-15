@@ -116,11 +116,27 @@ Hook 比普通函数更为严格。只能在组件（或其他 Hook）的 `顶�
   - 通过向组件传递不同的 key 来重置组件的状态。
   - 当你在渲染期间调用 set 函数时，React 将在你的组件使用 return 语句退出后立即重新渲染该组件，并在渲染子组件前进行。这样，子组件就不需要进行两次渲染。你的组件函数的其余部分仍会执行（然后结果将被丢弃）。如果你的条件判断在所有 Hook 调用的下方，可以提前添加一个 return; 以便更早地重新开始渲染。
 
+- useReducer()
+  - reducer()必须是纯函数，不应该包含异步请求、定时器或者任何副作用（对组件外部有影响的操作）。它们应该以`不可变值`的方式去更新 对象 和 数组。
+  - reducer()在渲染时运行
 - useContext()
 
   不是响应式的。 更新机制是自上而下的逐级更新数据重新渲染，而不是监听数据变化，直接通知相应组件修改。
 
-- useEffect()
+- useEffect(setup, dependencies?)
+  - setup 函数选择性返回一个 清理（cleanup） 函数。组件挂载时React将运行setup函数。在每次依赖项变更重新渲染后，React `首先使用旧值运行 cleanup 函数`（如果你提供了该函数），然后`使用新值运行 setup 函数`。在组件从 DOM 中移除后，React 将最后一次运行 cleanup 函数。
+  - 可选 dependencies：setup 代码中引用的所有`响应式值`的列表。响应式值包括 props、state 以及所有直接在组件内部声明的变量和函数。依赖项列表的元素数量必须是固定的。React 将使用 Object.is 来比较每个依赖项和它先前的值。如果省略此参数，则在每次重新渲染组件之后，将重新运行 Effect 函数。
+
+注意事项：
+
+- 只能在 组件的顶层 或自己的 Hook 中调用它，而不能在循环或者条件内部调用。
+- 不与外部同步，可能不需要useEffect
+- 当严格模式启动时，React 将在真正的 setup 函数首次运行前，运行一个开发模式下专有的额外 setup + cleanup 周期。
+- 依赖项是组件内部定义的对象或函数,可能导致 Effect 过多地重新运行。解决这个问题可以删除不必要的 对象 和 函数 依赖项，或可以 抽离状态更新 和 非响应式的逻辑 到 Effect 之外。
+- 如果Effect 不是由交互（比如点击）引起的，那么 React 会让浏览器 在运行 Effect 前先绘制出更新后的屏幕。如果Effect 正在做一些视觉相关的事情，并且有显著的延迟（例如，它会闪烁），那么将 useEffect 替换为 useLayoutEffect。
+- 即使Effect 是由一个交互（比如点击）引起的，浏览器也可能在处理 Effect 内部的状态更新之前重新绘制屏幕。如果一定要阻止浏览器重新绘制屏幕，则需要用 useLayoutEffect 替换 useEffect。
+- Effect 只在客户端上运行，在服务端渲染中不会运行。
+
   - componentDidMount()
   - componentDidUpdate() 需要指定依赖
   - componentWillUnmount() 通过 return 返回清理函数
@@ -130,11 +146,30 @@ Hook 比普通函数更为严格。只能在组件（或其他 Hook）的 `顶�
 当第二个参数写入依赖时，只有依赖包含的某个值发生变化时执行;
 若返回一个函数,组件销毁时会执行这个函数。
 
-useEffect 在浏览器渲染完成后执行,useLayoutEffect 在浏览器渲染完成前执行。
-useLayoutEffect 总是比 useEffect 先执行。
+useEffect 在浏览器渲染完成后执行, useLayoutEffect 在浏览器渲染完成前执行。
+useLayoutEffect 在浏览器重新绘制屏幕之前触发 总是比 useEffect 先执行。
 
 - useLayoutEffect() 里的任务最好影响了 Layout。为了用户体验，优先使用 useEffect(优先渲染)。
-  在重新渲染前执行计算布局相关的操作
+  在重新渲染前执行计算布局相关的操作 useLayoutEffect 内部的代码和所有计划的状态更新阻塞了浏览器重新绘制屏幕。
+
+useRef(initialValue) 帮助引用一个不需要渲染的值
+useRef 返回一个只有一个属性的对象
+current：初始值为传递的 initialValue。之后可以将其设置为其他值。如果将 ref 对象作为一个 JSX 节点的 ref 属性传递给 React，React 将为它设置 current 属性。
+
+注意事项：
+
+- 可以修改 ref.current 属性。与 state 不同，它是可变的。然而，如果它持有一个用于渲染的对象（例如 state 的一部分），那么就不应该修改这个对象。
+- 改变 ref.current 属性时，React 不会重新渲染组件。
+- 除了 初始化 外不要在渲染期间写入或者读取 ref.current，否则会使组件行为变得不可预测。
+- 不要在渲染期间写入或者读取 ref.current,可以在 事件处理程序或者 Effect 中读取和写入 ref。如果不得不在渲染期间读取 或者写入，那么应该 使用 state 代替。
+- 通过 ref 操作 DOM，React 内置了对它的支持。默认情况下，自定义组件不会暴露它们内部 DOM 节点的 ref。
+- 使用组件组合，通过 useRef 持有输入框并通过 forwardRef 将其暴露给父组件
+
+ref的优势
+
+- 可以在重新渲染之间存储信息
+- 改变它 不会触发重新渲染
+- 本地化的，属于组件
 
 memo() 使得组件只有依赖的 props 发生变化才会执行一遍并且再次渲染。
 
@@ -163,3 +198,5 @@ memo() 使得组件只有依赖的 props 发生变化才会执行一遍并且再
 
   useReducer()与 useState()非常类似，但是它将组件的状态更新逻辑抽离到组件外。
   state 是只读的，不能直接修改对象或数组型的 state。
+
+useEffectEvent 可以提取非响应式逻辑到 Effect Event 中。
