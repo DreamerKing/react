@@ -4,10 +4,13 @@
 单向数据流 通过组件层级结构从父组件传递数据至子组件
 数据驱动
 
-`create-next-app`
-`create-remix`
-create-gatsby
-`create-expo-app`
+## 常用工具和插件
+
+- create-vite
+- `create-next-app`
+- `create-remix`
+- create-gatsby
+- `create-expo-app`
 
 eslint-plugin-react-hooks
 eslint-config-react-app
@@ -51,10 +54,14 @@ React 无法保证组件函数以任何特定的顺序执行，因此无法通�
 
 ## 组件
 
-一个组件必须是纯粹的
+纯函数仅执行计算操作，不做其他操作。组件应按纯函数严格编写，以避免一些随着代码库的增长而出现的、令人困扰的 bug 以及不可预测的行为。
+
+纯函数特征:
 
 - 只负责自己的任务。 它不会更改在该函数调用前就已存在的对象或变量。
-- 输入相同，则输出相同。 给定相同的输入，组件应该总是返回相同的 JSX。
+- 输入相同，则输出相同。 给定相同的输入，纯函数应总是返回相同的结果。
+
+React假设所有组件都是纯函数。React的渲染过程必须自始至终是纯粹的。组件应该只返回它们的 JSX，而不 改变 在渲染前，就已存在的任何对象或变量。
 
 渲染随时可能发生，因此组件不应依赖于彼此的渲染顺序。
 不应该改变组件用于渲染的任何输入。这包括 props、state 和 context。通过 “设置” state 来更新界面，而不要改变预先存在的对象。
@@ -171,9 +178,16 @@ ref的优势
 - 改变它 不会触发重新渲染
 - 本地化的，属于组件
 
-memo() 使得组件只有依赖的 props 发生变化才会执行一遍并且再次渲染。
+memo(component) 父组件重新渲染当传入子组件props不变时跳过渲染。
+避免不必要的使用缓存组件
 
-- useMemo(calculateValue, dependencies) 缓存函数执行结果。
+- 当一个组件在视觉上包裹其他组件时，让它 接受 JSX 作为子组件。
+- 优先使用局部状态，并且不要将 状态提升 到不必要的层级。
+- 保持渲染逻辑纯粹。
+- 避免不必要的 Effect 来更新状态。
+- 尝试从Effect 中删除不必要的依赖项。
+
+- useMemo(calculateValue, dependencies) 缓存函数执行结果 避免父组件每次都重新创建对象。 在每次重新渲染的时能够缓存计算的结果
 
   - calculateValue 不接受参数的但返回任意类型的需要缓存的值,这个函数内部调用的函数必须是纯函数;
   - dependencies 是 calculateValue 内部调用函数的依赖观测数组;
@@ -183,8 +197,8 @@ memo() 使得组件只有依赖的 props 发生变化才会执行一遍并且再
 
 用法:
 
-- 跳过花费较大的计算
-- 跳过组件的重新渲染
+- 跳过花费较大的计算 useMemo 中进行的计算明显很慢，而且它的依赖关系很少改变。
+- 跳过组件的重新渲染 计算结果作为 props 传递给包裹在 memo 中的组件
 - 缓存其他 hooks 的依赖
 
 - useCallback()是 useMemo() 函数类型的语法糖
@@ -200,3 +214,37 @@ memo() 使得组件只有依赖的 props 发生变化才会执行一遍并且再
   state 是只读的，不能直接修改对象或数组型的 state。
 
 useEffectEvent 可以提取非响应式逻辑到 Effect Event 中。
+
+lazy(load) 第一次被渲染之前延迟加载组件的代码
+load: 一个返回 Promise 或另一个 thenable（具有 then 方法的类 Promise 对象）的函数。返回的 Promise 和 Promise 的解析值都将被缓存，因此 React 不会多次调用 load 函数。如果 Promise 被拒绝，则 React 将抛出拒绝原因给最近的错误边界处理。
+
+useImperativeHandle(ref, createHandle, dependencies?) 自定义由 ref 暴露出来的句柄。
+
+如果可以通过 prop 实现，那就不应该使用 ref。
+
+useInsertionEffect(setup, dependencies?) 在布局副作用触发之前将元素插入到 DOM 中
+
+- 不能在insertionEffect中更新状态，访问ref。
+- insertionEffect的执行可能在DOM更新之前也可能在之后。
+- useInsertionEffect中的setup和cleanup可能交错执行。
+
+CSS-in-JS 三种常见的实现方法：
+
+- 使用编译器静态提取到 CSS 文件
+- 内联样式，例如 <div style={{ opacity: 1 }}>
+- 运行时注入 <style> 标签
+
+一般建议采用前两种方式（静态样式使用 CSS 文件，动态样式使用内联样式）
+
+采用运行时注入 <style> 标签可能会有一下问题：
+
+- 运行时注入会使浏览器频繁地重新计算样式。
+- 如果在 React 生命周期中某个错误的时机进行运行时注入，它可能会非常慢。
+
+第一个问题无法解决，但是 useInsertionEffect 可以帮助你解决第二个问题。
+
+useTransition() 不阻塞 UI 的情况下更新状态
+
+- 传递给 startTransition 的函数`必须是同步`的
+- 标记为 transition 的状态更新可以被其他状态更新打断
+- transition 更新不能用于控制文本输入。

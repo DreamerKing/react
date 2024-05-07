@@ -1,9 +1,10 @@
 import { useSelector, useDispatch } from "react-redux";
+
 import {
   increment,
   decrement,
   incrementBy,
-} from "./features/counter/counterSlice.js";
+} from "../features/counter/counterSlice.js";
 
 export default function ReduxApp() {
   const counter = useSelector((state: any) => state.counter.value);
