@@ -48,7 +48,7 @@ npm install --save-dev eslint-config-prettier
 
 注意 `rules`规则优先于`extends`。
 
-## RDT React Dev Tool
+## RDT
 
 ```bash
 yarn global add react-devtools

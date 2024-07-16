@@ -1,12 +1,15 @@
 import { createBrowserRouter } from 'react-router-dom';
 import TestUseDebugValue from '../components/TestUseDebugValue.tsx';
-import TestUseImperativehandle from '../hooks/TestUseImperativeHandle.tsx';
+import TestUseImperativehandle from '../views/hooks/TestUseImperativeHandle.tsx';
 import ReduxApp from '../redux-app/ReduxApp.tsx';
 import Root, { loader as rootLoader, action as rootAction } from './root'
 import ErrorPage from '../learn-router/error-page'
 import Contact, { loader as contactLoader } from './contact'
 import EditContact from './edit'
-import Hooks from '../hooks/Hooks.tsx'
+import Hooks from '@/views/hooks/Hooks.tsx'
+import Timer from '../views/hooks/Timer.tsx';
+import Wrapper from '../views/builtin/Wrapper.tsx';
+import TestFragment from '../views/builtin/Blog.tsx';
 
 const router = createBrowserRouter([
   {
@@ -43,6 +46,20 @@ const router = createBrowserRouter([
       {
         path: 'imperative-handle',
         element: <TestUseImperativehandle />,
+      },
+      {
+        path: 'timer',
+        element: <Timer/>
+      }
+    ]
+  },
+  {
+    path: "/component",
+    element: <Wrapper/>,
+    children: [
+      {
+        path: "fragment",
+        element: <TestFragment/>
       }
     ]
   },
