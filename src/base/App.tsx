@@ -1,6 +1,9 @@
 import { useState } from "react";
 import "./App.css";
 
+import PropMutator from './PropMutator';
+import StyledComponent from './StyledComponent';
+
 function App() {
   const [count, setCount] = useState(0);
   const handleClick = () => {
@@ -20,12 +23,15 @@ function App() {
   const test = "";
   console.log("render:", count);
   console.log(`${url}${path}`);
+
   return (
     <>
       <div className="card">
         {!test && <p>new</p>}
         <button onClick={handleClick}>count is {count}</button>
       </div>
+      <PropMutator number={count} setNumber={handleClick} />
+      <StyledComponent/>
     </>
   );
 }

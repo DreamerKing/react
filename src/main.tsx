@@ -20,7 +20,6 @@ root.render(
         <RouterProvider router={router} />
       </Provider>
     </Profiler>
-
   </React.StrictMode>
 );
 

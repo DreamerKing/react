@@ -71,3 +71,12 @@ UI
 React 组件需要首字母大写
 
 React 创建可复用 UI 组件，每段 UI 片段都可以作为一个组件。React 组件一个首字母大写返回 JSX 标签的常规 js 函数。
+
+```bash
+npm set registry https://registry.npmjs.org
+npm outdated
+npm audit
+p audit --audit-level=high --only=prod
+# 更新包
+npm update object-path --depth 1
+```

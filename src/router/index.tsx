@@ -10,15 +10,14 @@ import Hooks from '@/views/hooks/Hooks.tsx'
 import Timer from '../views/hooks/Timer.tsx';
 import Wrapper from '../views/builtin/Wrapper.tsx';
 import TestFragment from '../views/builtin/Blog.tsx';
+import { Mouse } from '@/components/Mouse.js';
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: (
-      <ReduxApp />
-    ),
+    path: "/redux",
+    element: <ReduxApp />,
   },
-  {
+  /* {
     path: '/react-router',
     element: (<Root />),
     errorElement: <ErrorPage />,
@@ -34,7 +33,7 @@ const router = createBrowserRouter([
         loader: contactLoader,
         element: <EditContact />
       }]
-  },
+  }, */
   {
     path: "/hooks",
     element: <Hooks/>,
@@ -65,7 +64,7 @@ const router = createBrowserRouter([
   },
   {
     path: "about",
-    element: <div>About</div>,
+    element: <Mouse>{(pos) => <div> Mouse at {pos.x},{ pos.y}</div> }</Mouse>,
   },
 ]);
 
