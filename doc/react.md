@@ -1,33 +1,709 @@
 # React
 
-状态提升
-单向数据流 通过组件层级结构从父组件传递数据至子组件
-数据驱动
+## 状态提升
 
-## 常用工具和插件
+状态提升是React组件设计的基础模式，指的是将多个组件需要共享的状态从子组件移动到它们的共同父组件中管理。
 
-- create-vite
-- `create-next-app`
-- `create-remix`
-- create-gatsby
-- `create-expo-app`
+### 核心概念
 
-eslint-plugin-react-hooks
-eslint-config-react-app
-eslint-config-prettier 禁用eslint格式化使用prettier格式化
+1. **共享状态管理**
+   - 当多个子组件需要访问和修改同一个状态时，将状态提升到它们的共同父组件
+   - 父组件成为"单一数据源"(Single Source of Truth)
+   - 通过props将状态传递给需要的子组件
 
-react-devtools
+2. **数据流向**
+   - **数据向下流动**：父组件通过props将状态传递给子组件
+   - **事件向上流动**：子组件通过回调函数通知父组件更新状态
 
-支持正则搜索过滤
+### 实现步骤
 
-优化方法
+1. **识别共享状态**：找出需要在多个组件间共享的状态
+2. **找到共同父组件**：确定所有需要该状态的组件的最近共同祖先
+3. **移动状态**：将状态从子组件移动到共同父组件
+4. **传递状态**：通过props将状态传递给子组件
+5. **传递更新函数**：通过props传递状态更新函数给子组件
 
-- 渲染更少的组件
-- 减少组件的层级
-- 使用列表虚拟化(窗口化)优化长列表渲染
-- 缓存组件，最小化重新渲染
+### 优势
 
-## JSX
+- **数据一致性**：确保所有组件使用相同的数据源
+- **可预测性**：数据流向清晰，便于调试和维护
+- **组件解耦**：子组件不需要知道数据的来源，只关注展示和交互
+- **状态同步**：多个组件的状态自动保持同步
+
+### 示例场景
+
+```javascript
+// 温度转换器 - 状态提升的经典例子
+function TemperatureInput({ scale, temperature, onTemperatureChange }) {
+  return (
+    <fieldset>
+      <legend>在{scale === 'c' ? '摄氏度' : '华氏度'}中输入温度：</legend>
+      <input
+        value={temperature}
+        onChange={e => onTemperatureChange(e.target.value)}
+      />
+    </fieldset>
+  );
+}
+
+function Calculator() {
+  const [temperature, setTemperature] = useState('');
+  const [scale, setScale] = useState('c');
+
+  return (
+    <div>
+      <TemperatureInput
+        scale="c"
+        temperature={scale === 'c' ? temperature : tryConvert(temperature, toFahrenheit)}
+        onTemperatureChange={temp => { setTemperature(temp); setScale('c'); }}
+      />
+      <TemperatureInput
+        scale="f"
+        temperature={scale === 'f' ? temperature : tryConvert(temperature, toCelsius)}
+        onTemperatureChange={temp => { setTemperature(temp); setScale('f'); }}
+      />
+    </div>
+  );
+}
+```
+
+### 注意事项
+
+- **避免过度提升**：只在确实需要共享时才提升状态
+- **性能考虑**：状态提升可能导致不必要的重新渲染
+- **组件复杂性**：过度提升会使父组件变得复杂
+- **使用Context**：当状态需要跨越多层组件时，考虑使用React Context
+
+### 与其他模式的关系
+
+- **组合模式**：通过children prop传递组件，减少状态提升的需要
+- **Context模式**：避免深层props传递，适合全局或跨多层的状态
+- **状态管理库**：Redux、Zustand等，用于复杂应用的状态管理
+
+## 受控组件与非受控组件
+
+### 受控组件
+
+受控组件是指其状态完全由props驱动的组件，组件本身不维护内部状态。
+
+**特点：**
+
+- 组件的状态由父组件通过props传递
+- 组件不维护自己的内部状态
+- 所有状态变更都通过回调函数通知父组件
+- 数据流是单向的：props → 组件显示，事件 → 回调函数
+
+**示例：**
+
+```javascript
+// 受控组件 - 状态由父组件管理
+function ControlledInput({ value, onChange }) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={onChange}
+    />
+  );
+}
+
+// 父组件控制子组件状态
+function ParentComponent() {
+  const [inputValue, setInputValue] = useState('');
+
+  return (
+    <ControlledInput
+      value={inputValue}
+      onChange={(e) => setInputValue(e.target.value)}
+    />
+  );
+}
+```
+
+### 非受控组件 (Uncontrolled Components)
+
+非受控组件是指组件自身维护内部状态，不依赖于外部props来控制状态的组件。
+
+**特点：**
+
+- 组件维护自己的内部状态（使用useState、useReducer等）
+- 不依赖父组件传递状态
+- 可以通过props接收初始值或配置
+- 通过回调函数向父组件报告状态变化（可选）
+
+**示例：**
+
+```javascript
+// 非受控组件 - 组件自身维护状态
+function UncontrolledInput({ initialValue = '', onValueChange }) {
+  const [value, setValue] = useState(initialValue);
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    // 可选：通知父组件状态变化
+    onValueChange?.(newValue);
+  };
+
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={handleChange}
+    />
+  );
+}
+
+// 父组件使用非受控组件
+function ParentComponent() {
+  return (
+    <UncontrolledInput
+      initialValue="默认值"
+      onValueChange={(value) => console.log('值变化:', value)}
+    />
+  );
+}
+```
+
+### 核心区别对比
+
+| 特性 | 受控组件 | 非受控组件 |
+|------|----------|------------|
+| **状态管理** | 由父组件通过props控制 | 组件自身维护内部状态 |
+| **数据来源** | props | 内部state |
+| **状态更新** | 通过回调函数通知父组件 | 组件内部直接更新state |
+| **初始值** | 通过props传递 | 可通过props接收，也可内部定义 |
+| **灵活性** | 父组件完全控制,灵活但需要更多配置 | 组件自主性强,配置少,易于使用,不怎么灵活 |
+| **复杂度** | 父组件需要管理更多状态 | 组件内部逻辑相对简单 |
+| **重用性** | 高度可重用，行为一致 | 可重用，但行为可能因内部状态而异 |
+| **测试** | 容易测试，行为可预测 | 需要测试内部状态变化 |
+
+### 使用场景建议
+
+**使用受控组件的情况：**
+
+- 需要在多个组件间共享和同步状态
+- 父组件需要完全控制子组件的行为
+- 需要实现复杂的状态协调逻辑
+- 表单验证需要在父组件层面进行
+- 需要实现撤销/重做功能
+
+**使用非受控组件的情况：**
+
+- 组件功能相对独立，不需要与外部紧密协调
+- 希望组件具有自主性和封装性
+- 简化父组件的状态管理
+- 组件内部逻辑比较复杂，适合封装
+- 构建可复用的组件库
+
+### 最佳实践
+
+1. **明确组件职责**：根据组件是否需要外部控制来选择模式
+2. **状态提升原则**：当多个组件需要共享状态时，使用受控组件
+3. **封装性考虑**：独立功能的组件可以设计为非受控组件
+4. **混合使用**：同一个组件可以同时支持受控和非受控模式
+5. **文档说明**：清楚标明组件是受控还是非受控的
+
+### 混合模式示例
+
+```javascript
+// 支持受控和非受控两种模式的组件
+function FlexibleInput({ value, onChange, defaultValue = '' }) {
+  // 内部状态
+  const [internalValue, setInternalValue] = useState(defaultValue);
+
+  // 判断是否为受控组件
+  const isControlled = value !== undefined;
+  const currentValue = isControlled ? value : internalValue;
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+
+    if (!isControlled) {
+      setInternalValue(newValue);
+    }
+
+    onChange?.(e);
+  };
+
+  return (
+    <input
+      type="text"
+      value={currentValue}
+      onChange={handleChange}
+    />
+  );
+}
+
+// 受控模式使用
+<FlexibleInput value={controlledValue} onChange={setControlledValue} />
+
+// 非受控模式使用
+<FlexibleInput defaultValue="初始值" onChange={(e) => console.log(e.target.value)} />
+```
+
+## 数据驱动与数据流
+
+### 数据驱动
+
+数据驱动是现代前端框架的核心理念，UI的呈现完全由数据状态决定。
+
+**核心思想：**
+
+- **UI = f(data)**：用户界面是数据的函数
+- **状态驱动渲染**：当数据改变时，UI自动更新
+- **声明式编程**：描述想要的结果，而不是如何实现
+
+**优势：**
+
+- 简化开发：专注于数据逻辑，UI自动更新
+- 一致性：相同数据总是产生相同UI
+- 可预测：UI状态完全由数据决定
+- 易测试：测试数据变化即可验证UI
+
+**React中的数据驱动：**
+
+```javascript
+function DataDrivenComponent() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // 根据不同数据状态渲染不同UI
+  if (loading) return <div>加载中...</div>;
+  if (error) return <div>错误: {error}</div>;
+  if (users.length === 0) return <div>暂无数据</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 单向数据流
+
+单向数据流是React的核心设计理念，指数据在应用中只能单向传递。
+
+**核心特点：**
+
+- **数据向下流动**：数据从父组件通过props传递给子组件
+- **事件向上传播**：子组件通过回调函数将事件通知给父组件
+- **单一数据源**：每个状态都有明确的"拥有者"组件
+- **可预测性**：数据流向清晰，便于调试和理解
+
+**优势：**
+
+- 降低复杂性，避免数据混乱
+- 便于调试，数据变化路径清晰
+- 提高可维护性和可测试性
+- 避免意外的副作用
+
+**示例：**
+
+```js
+// 父组件管理状态，向下传递数据
+function ParentComponent() {
+  const [count, setCount] = useState(0);
+
+  const handleIncrement = () => {
+    setCount(count + 1);
+  };
+
+  return (
+    <div>
+      <ChildComponent
+        count={count}
+        onIncrement={handleIncrement}
+      />
+    </div>
+  );
+}
+
+// 子组件接收props，通过回调向上通信
+function ChildComponent({ count, onIncrement }) {
+  return (
+    <div>
+      <p>计数: {count}</p>
+      <button onClick={onIncrement}>增加</button>
+    </div>
+  );
+}
+```
+
+### 双向数据流
+
+双向数据流允许数据在组件间双向传递和同步。
+
+**特点：**
+
+- 数据可以在父子组件间双向流动
+- 子组件可以直接修改父组件的数据
+- 数据绑定更加便捷
+
+**问题：**
+
+- 数据流向复杂，难以追踪数据变化来源
+- 容易产生意外的副作用
+- 调试困难，状态变化不可预测
+- 组件间耦合度高
+
+**React中的双向绑定实现：**
+
+```js
+// 模拟双向绑定的效果
+function TwoWayBinding() {
+  const [value, setValue] = useState('');
+
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      placeholder="双向绑定示例"
+    />
+  );
+}
+```
+
+### 对比总结
+
+| 特性 | 单向数据流 | 双向数据流 |
+|------|------------|------------|
+| **复杂度** | 低，流向清晰 | 高，流向复杂 |
+| **调试** | 容易追踪 | 困难定位 |
+| **性能** | 可控性强 | 可能有冗余更新 |
+| **维护性** | 高 | 低 |
+| **学习成本** | 稍高 | 较低 |
+
+### 最佳实践
+
+1. **坚持单向数据流**：避免子组件直接修改父组件状态
+2. **状态提升**：将共享状态提升到最近的共同父组件
+3. **数据驱动思维**：先设计数据结构，再考虑UI展示
+4. **最小化状态**：只保存必要的状态，其他数据通过计算得出
+5. **不可变性**：避免直接修改状态对象，使用不可变的方式更新
+
+## 渲染树 (Render Tree)
+
+渲染树是React应用中组件层次结构的可视化表示，描述了组件之间的父子关系和数据流向。
+
+### 核心概念
+
+**定义：**
+
+- 渲染树是React组件实例的树状结构
+- 反映了组件的嵌套关系和层级结构
+- 是React内部用来管理组件生命周期和状态的数据结构
+
+**组成元素：**
+
+- **节点**：每个组件实例在渲染树中对应一个节点
+- **边**：表示父子组件关系
+- **根节点**：应用的顶层组件（通常是App组件）
+- **叶节点**：没有子组件的组件
+
+### 渲染树的特点
+
+1. **层次结构**：严格的树状结构，每个节点有唯一父节点
+2. **动态性**：随着组件的挂载、更新、卸载而动态变化
+3. **单向关系**：数据和props只能从父节点向子节点流动
+4. **唯一性**：每个组件实例在树中有唯一位置
+
+### 示例结构
+
+```javascript
+// 组件代码
+function App() {
+  return (
+    <div>
+      <Header />
+      <MainContent />
+      <Footer />
+    </div>
+  );
+}
+
+function Header() {
+  return (
+    <header>
+      <Navigation />
+      <Logo />
+    </header>
+  );
+}
+
+function MainContent() {
+  return (
+    <main>
+      <Sidebar />
+      <Content />
+    </main>
+  );
+}
+
+function Navigation() {
+  return (
+    <nav>
+      <NavItem />
+      <NavItem />
+    </nav>
+  );
+}
+```
+
+**对应的渲染树结构：**
+
+```
+App
+├── div
+    ├── Header
+    │   ├── header
+    │       ├── Navigation
+    │       │   ├── nav
+    │       │       ├── NavItem
+    │       │       └── NavItem
+    │       └── Logo
+    ├── MainContent
+    │   ├── main
+    │       ├── Sidebar
+    │       └── Content
+    └── Footer
+```
+
+### 渲染树与其他概念的关系
+
+**1. 与虚拟DOM的关系：**
+
+- 渲染树描述组件结构，虚拟DOM描述最终的DOM结构
+- 组件渲染时会生成对应的虚拟DOM节点
+- 一个组件节点可能对应多个虚拟DOM节点
+
+**2. 与Fiber树的关系：**
+
+- Fiber是React 16+中渲染树的内部实现
+- 每个渲染树节点对应一个Fiber节点
+- Fiber树支持时间切片和优先级调度
+
+**3. 与组件树的区别：**
+
+- 组件树是逻辑概念，渲染树是实际的运行时结构
+- 渲染树包含组件实例的具体状态和props
+
+### 渲染树的生命周期
+
+**1. 构建阶段：**
+
+```javascript
+// 初始渲染时构建渲染树
+ReactDOM.render(<App />, document.getElementById('root'));
+```
+
+**2. 更新阶段：**
+
+```javascript
+// 状态变化导致渲染树更新
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  // 状态更新会触发子树重新渲染
+  return (
+    <div>
+      <span>{count}</span>
+      <button onClick={() => setCount(count + 1)}>
+        增加
+      </button>
+    </div>
+  );
+}
+```
+
+**3. 销毁阶段：**
+
+```javascript
+// 组件卸载时从渲染树中移除
+function ConditionalComponent({ show }) {
+  return (
+    <div>
+      {show && <ExpensiveComponent />} // 条件渲染影响渲染树
+    </div>
+  );
+}
+```
+
+### 渲染树的遍历和更新
+
+**深度优先遍历：**
+
+- React使用深度优先的方式遍历渲染树
+- 先处理父组件，再处理子组件
+- 保证数据流的正确性
+
+**协调算法（Reconciliation）：**
+
+```javascript
+// React比较新旧渲染树，找出变化
+function TodoList({ todos }) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <TodoItem
+          key={todo.id}  // key帮助React识别节点
+          todo={todo}
+        />
+      ))}
+    </ul>
+  );
+}
+```
+
+### Key的重要性
+
+**正确使用Key：**
+
+```javascript
+// 好的做法：使用稳定的唯一标识
+function UserList({ users }) {
+  return (
+    <div>
+      {users.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+
+// 错误做法：使用数组索引
+function BadUserList({ users }) {
+  return (
+    <div>
+      {users.map((user, index) => (
+        <UserCard key={index} user={user} /> // 可能导致渲染问题
+      ))}
+    </div>
+  );
+}
+```
+
+### 性能优化与渲染树
+
+**1. 避免不必要的重新渲染：**
+
+```javascript
+// 使用React.memo优化
+const ExpensiveComponent = React.memo(function ExpensiveComponent({ data }) {
+  return <div>{/* 复杂渲染逻辑 */}</div>;
+});
+
+// 使用useMemo缓存计算结果
+function OptimizedComponent({ items }) {
+  const expensiveValue = useMemo(() => {
+    return items.reduce((sum, item) => sum + item.value, 0);
+  }, [items]);
+
+  return <div>{expensiveValue}</div>;
+}
+```
+
+**2. 合理的组件拆分：**
+
+```javascript
+// 将状态本地化，减少渲染范围
+function ChatApp() {
+  return (
+    <div>
+      <UserList />      // 独立的用户列表
+      <MessageList />   // 独立的消息列表
+      <InputArea />     // 独立的输入区域
+    </div>
+  );
+}
+```
+
+### 调试渲染树
+
+**React Developer Tools：**
+
+- 可视化查看组件树结构
+- 查看组件的props和state
+- 分析渲染性能
+
+**Profiler API：**
+
+```javascript
+import { Profiler } from 'react';
+
+function onRenderCallback(id, phase, actualDuration) {
+  console.log('渲染信息:', { id, phase, actualDuration });
+}
+
+function App() {
+  return (
+    <Profiler id="App" onRender={onRenderCallback}>
+      <Header />
+      <MainContent />
+      <Footer />
+    </Profiler>
+  );
+}
+```
+
+### 最佳实践
+
+1. **保持渲染树的稳定性**：避免在渲染过程中创建新的组件类型
+2. **合理使用Key**：为列表项提供稳定且唯一的key
+3. **组件职责单一**：每个组件专注于单一功能
+4. **状态就近原则**：将状态放在最需要它的组件中
+5. **避免深层嵌套**：过深的组件树可能影响性能
+
+渲染树是理解React工作原理的关键概念，掌握它有助于编写更高效、更易维护的React应用。
+
+## Context API
+
+Context API 是 React 提供的一种用于跨组件传递数据的机制，允许在组件树中共享数据而不必通过 props 一层层传递。
+
+在默认情况下，React.createContext() 提供的 Context，如果其 value 发生变化，即使某个组件自身并没有使用该值，只要它在 Provider 包围范围内，但其子孙组件有消费 Context，那么中间组件也会重新执行函数，但是否触发实际 DOM 渲染取决于该组件本身是否渲染了变化内容。
+
+## ⚠️ 如何避免中间组件重新渲染？
+
+### ✅ 方法 1：将消费者组件“拆出去”，避免父组件受影响
+
+```jsx
+function Parent() {
+  return <MemoizedChild />;
+}
+const MemoizedChild = React.memo(() => {
+  const theme = useContext(ThemeContext);
+  return <div className={theme}>Hello</div>;
+});
+```
+
+### ✅ 方法 2：使用 `useContextSelector`（需借助第三方库如 [use-context-selector](https://github.com/dai-shi/use-context-selector)）
+
+这个方案可实现 Context value 的 **局部选择**，避免全量订阅。
+
+---
+
+## ✅ 总结
+
+| 情况                           | 会重新渲染？                 |
+| ---------------------------- | ---------------------- |
+| 中间组件未使用 Context              | ✅ 函数体会执行（默认行为）         |
+| 中间组件已使用 Context              | ✅                      |
+| 中间组件被 `React.memo` 包裹        | 🚫 不会重新执行（如果 props 没变） |
+| 使用 `useContextSelector` 精准订阅 | 🚫                     |
+
+---
+
+## ref
+
+Ref 是 React 提供的一种方式，用于直接访问 DOM 元素或组件实例。它允许开发者在不使用 state 的情况下，直接操作 DOM 或获取组件的实例方法。 希望组件记住某些信息，但又不想让这些信息触发新的渲染时，可以使用 ref。ref 是一个普通的 JavaScript 对象，具有可以被读取和修改的 current 属性。组件不会在递增时重新渲染，会在每次重新渲染之间保留ref 的值。
+
+## JSX 语法
+
+JSX 是一种 JavaScript 的语法扩展，允许在 JavaScript 代码中直接编写类似 HTML 的标签。它使得编写 React 组件变得更加直观和易读。
 
 1. 只能返回一个根元素 (不能在一个函数中返回多个对象)
 2. 标签必须闭合
@@ -145,303 +821,3 @@ CSS模块解决了CSS中命名冲突和作用域的问题，在组件的编译�
 
 CSS-IN-JS
 styled-components
-
-## Hooks
-
-- State Hook 状态存储和变更
-  - useState 直接更新
-  - useReducer 声明式状态更新逻辑
-- Context Hook 跨组件数据传递
-  - useContext
-- Ref Hook 保存一些不用于渲染的信息，更新ref不会重新渲染组件
-  - useRef
-  - useImperativeHandle
-- Effect Hook 组件与外部系统之间同步，包括处理网络、浏览器、DOM、动画、使用不同 UI 库编写的小部件以及其他非 React 代码。避免使用 Effect 协调应用程序的数据流。
-  - useEffect
-  - useLayoutEffect 在浏览器重新绘制屏幕前执行，可以在此处测量布局。
-  - useInsertionEffect 在 React 对 DOM 进行更改之前触发，库可以在此处插入动态 CSS。
-- 性能Hook 如使用缓存、跳过重新渲染
-  - useMemo 缓存计算代价昂贵的计算结果
-  - useCallback 函数传递给优化组件之前缓存函数定义
-  - useTransition 允许将状态转换标记为非阻塞，并允许其他更新中断它。
-  - useDeferredValue 允许延迟更新 UI 的非关键部分，以让其他部分先更新。
-  将必须同步的阻塞更新（比如使用输入法输入内容）与不需要阻塞用户界面的非阻塞更新（比如更新图表）分离以提高性能。
-- 资源Hook 资源可以被组件访问，而无需将它们作为状态的一部分。
-  - use 允许读取像 Promise 或 上下文 这样的资源的值。
-- 其他Hook
-  - useDebugValue 自定义 React 开发者工具为自定义 Hook 添加的标签。
-  - useId 将唯一的 ID 与组件相关联，其通常与可访问性 API 一起使用
-  - useSyncExternalStore 订阅外部 store
-- 自定义Hook
-
-Hook 比普通函数更为严格。只能在组件（或其他 Hook）的 `顶层调用` Hook。如果需要条件或循环中使用hook，则需要提取一个新的组件并在组件内部顶层使用。
-
-- useState(initialState) 在函数组件中管理状态
-  - 如果传递函数作为 initialState，则它将被视为 初始化函数。它应该是纯函数，不应该接受任何参数，并且应该返回一个任何类型的值。当初始化组件时，React 将调用你的初始化函数，并将其返回值存储为初始状态。在初始渲染后，此参数将被忽略。
-  - 调用更新函数时，React 将自动重新渲染组件;
-  - 更新函数可以接受一个值或一个函数作为参数;
-  - 更新函数是异步的，这使得 React 能够优化状态更新并提高性能；
-  - 更新函数可以接受一个回调函数作为参数，该回调函数将在状态值更新完毕后被调用。这使得您可以在更新状态值后执行其他操作，例如更新 DOM、调用 API 或触发其他副作用。
-  - set 函数，它可以让你将 state 更新为不同的值并触发重新渲染。它必须是纯函数，只接受待定的 state 作为其唯一参数，并应返回下一个状态。React 将把你的更新函数放入队列中并重新渲染组件。在下一次渲染期间，React 将通过把队列中所有更新函数应用于先前的状态来计算下一个状态。
-  - React 会 批量处理状态更新。它会在所有 事件处理函数运行 并调用其 set 函数后更新屏幕。这可以防止在单个事件期间多次重新渲染。在某些罕见情况下，你需要强制 React 更早地更新屏幕，例如访问 DOM，你可以使用 flushSync。
-  - 通过向组件传递不同的 key 来重置组件的状态。
-  - 当你在渲染期间调用 set 函数时，React 将在你的组件使用 return 语句退出后立即重新渲染该组件，并在渲染子组件前进行。这样，子组件就不需要进行两次渲染。你的组件函数的其余部分仍会执行（然后结果将被丢弃）。如果你的条件判断在所有 Hook 调用的下方，可以提前添加一个 return; 以便更早地重新开始渲染。
-
-  - useState返回的setter函数不会进行对象合并
-
-- useReducer()
-  - reducer()必须是纯函数，不应该包含异步请求、定时器或者任何副作用（对组件外部有影响的操作）。它们应该以`不可变值`的方式去更新 对象 和 数组。
-  - reducer()在渲染时运行
-- useContext()
-
-  不是响应式的。 更新机制是自上而下的逐级更新数据重新渲染，而不是监听数据变化，直接通知相应组件修改。
-
-- useEffect(setup, dependencies?)
-  - setup 函数选择性返回一个 清理（cleanup） 函数。组件挂载时React将运行setup函数。在每次依赖项变更重新渲染后，React `首先使用旧值运行 cleanup 函数`（如果你提供了该函数），然后`使用新值运行 setup 函数`。在组件从 DOM 中移除后，React 将最后一次运行 cleanup 函数。
-  - 可选 dependencies：setup 代码中引用的所有`响应式值`的列表。响应式值包括 props、state 以及所有直接在组件内部声明的变量和函数。依赖项列表的元素数量必须是固定的。React 将使用 Object.is 来比较每个依赖项和它先前的值。如果省略此参数，则在每次重新渲染组件之后，将重新运行 Effect 函数。
-
-注意事项：
-
-- 只能在 组件的顶层 或自己的 Hook 中调用它，而不能在循环或者条件内部调用。
-- 不与外部同步，可能不需要useEffect
-- 当严格模式启动时，React 将在真正的 setup 函数首次运行前，运行一个开发模式下专有的额外 setup + cleanup 周期。
-- 依赖项是组件内部定义的对象或函数,可能导致 Effect 过多地重新运行。解决这个问题可以删除不必要的 对象 和 函数 依赖项，或可以 抽离状态更新 和 非响应式的逻辑 到 Effect 之外。
-- 如果Effect 不是由交互（比如点击）引起的，那么 React 会让浏览器 在运行 Effect 前先绘制出更新后的屏幕。如果Effect 正在做一些视觉相关的事情，并且有显著的延迟（例如，它会闪烁），那么将 useEffect 替换为 useLayoutEffect。
-- 即使Effect 是由一个交互（比如点击）引起的，浏览器也可能在处理 Effect 内部的状态更新之前重新绘制屏幕。如果一定要阻止浏览器重新绘制屏幕，则需要用 useLayoutEffect 替换 useEffect。
-- Effect 只在客户端上运行，在服务端渲染中不会运行。
-
-  - componentDidMount()
-  - componentDidUpdate() 需要指定依赖
-  - componentWillUnmount() 通过 return 返回清理函数
-
-当第二参数为[]时，表示只是第一次渲染时执行;
-当省略第二个参数时,表示每次渲染都会执行;
-当第二个参数写入依赖时，只有依赖包含的某个值发生变化时执行;
-若返回一个函数,组件销毁时会执行这个函数。
-
-useEffect 在浏览器渲染完成后执行, useLayoutEffect 在浏览器渲染完成前执行。
-useLayoutEffect 在浏览器重新绘制屏幕之前触发 总是比 useEffect 先执行。
-
-- useLayoutEffect() 里的任务最好影响了 Layout。为了用户体验，优先使用 useEffect(优先渲染)。
-  在重新渲染前执行计算布局相关的操作 useLayoutEffect 内部的代码和所有计划的状态更新阻塞了浏览器重新绘制屏幕。
-
-- Effect 是一段响应式的代码块。它们在读取的值发生变化时重新进行同步。与事件处理程序不同，事件处理程序只在每次交互时运行一次，而 Effect 则在需要进行同步时运行。
-
-- 不能“选择”依赖项。依赖项必须包括 Effect 中读取的每个 响应式值。代码检查工具会强制执行此规则。有时，这可能会导致出现无限循环的问题，或者 Effect 过于频繁地重新进行同步。不要通过禁用代码检查来解决这些问题！
-  解决方案:
-  - `检查 Effect 是否表示了独立的同步过程`。如果 Effect 没有进行任何同步操作，可能是不必要的。如果它同时进行了几个独立的同步操作，将其拆分为多个 Effect。
-
-  - 如果想读取 props 或 state 的最新值，但又不想对其做出反应并重新同步 Effect，可以将 Effect 拆分为具有反应性的部分（保留在 Effect 中）和非反应性的部分（提取为名为 “Effect Event” 的内容）。
-
-  - 避免将对象和函数作为依赖项。如果在渲染过程中创建对象和函数，然后在 Effect 中读取它们，它们将在每次渲染时都不同。这将导致 Effect 每次都重新同步。
-
-- 组件可以挂载、更新和卸载。
-- 每个 Effect 与周围组件有着独立的生命周期。
-- 每个 Effect 描述了一个独立的同步过程，可以 开始 和 停止。
-- 在编写和读取 Effect 时，要独立地考虑每个 Effect（如何开始和停止同步），而不是从组件的角度思考（如何挂载、更新或卸载）。
-- 在组件主体内声明的值是“响应式”的。
-- 响应式值应该重新进行同步 Effect，因为它们可以随着时间的推移而发生变化。
-- 检查工具验证在 Effect 内部使用的所有响应式值都被指定为依赖项。
-- 检查工具标记的所有错误都是合理的。总是有一种方法可以修复代码，同时不违反规则。
-
-在某些情况下，React知道一个值永远不会改变，即使它在组件内部声明。例如，从 `useState 返回的 set 函数`和从 `useRef 返回的 ref 对象`是 稳定的 —— 它们保证在重新渲染时不会改变。稳定值不是响应式的，因此可以从列表中省略它们。包括它们是允许的：它们不会改变，所以无关紧要。
-
-useRef(initialValue) 帮助引用一个不需要渲染的值
-useRef 返回一个只有一个属性的对象
-current：初始值为传递的 initialValue。之后可以将其设置为其他值。如果将 ref 对象作为一个 JSX 节点的 ref 属性传递给 React，React 将为它设置 current 属性。
-
-注意事项：
-
-- 可以修改 ref.current 属性。与 state 不同，它是可变的。然而，如果它持有一个用于渲染的对象（例如 state 的一部分），那么就不应该修改这个对象。
-- 改变 ref.current 属性时，React 不会重新渲染组件。
-- 除了 初始化 外不要在渲染期间写入或者读取 ref.current，否则会使组件行为变得不可预测。
-- 不要在渲染期间写入或者读取 ref.current,可以在 事件处理程序或者 Effect 中读取和写入 ref。如果不得不在渲染期间读取 或者写入，那么应该 使用 state 代替。
-- 通过 ref 操作 DOM，React 内置了对它的支持。默认情况下，自定义组件不会暴露它们内部 DOM 节点的 ref。
-- 使用组件组合，通过 useRef 持有输入框并通过 forwardRef 将其暴露给父组件
-
-ref的优势
-
-- 可以在重新渲染之间存储信息
-- 改变它 不会触发重新渲染
-- 本地化的，属于组件
-
-memo(component) 父组件重新渲染当传入子组件props不变时跳过渲染。
-避免不必要的使用缓存组件
-
-- 当一个组件在视觉上包裹其他组件时，让它 接受 JSX 作为子组件。
-- 优先使用局部状态，并且不要将 状态提升 到不必要的层级。
-- 保持渲染逻辑纯粹。
-- 避免不必要的 Effect 来更新状态。
-- 尝试从Effect 中删除不必要的依赖项。
-
-- useMemo(calculateValue, dependencies) 缓存函数执行结果 避免父组件每次都重新创建对象。 在每次重新渲染的时能够缓存计算的结果
-
-  - calculateValue 不接受参数的但返回任意类型的需要缓存的值,这个函数内部调用的函数必须是纯函数;
-  - dependencies 是 calculateValue 内部调用函数的依赖观测数组;
-  - 自由依赖变化时才计算新的 value 值,如果不变则重用之前的值.
-  - 需要在函数组件或自定义 hooks 的顶层调用
-  - 在 Strict Mode 模式下会执行两次
-
-用法:
-
-- 跳过花费较大的计算 useMemo 中进行的计算明显很慢，而且它的依赖关系很少改变。
-- 跳过组件的重新渲染 计算结果作为 props 传递给包裹在 memo 中的组件
-- 缓存其他 hooks 的依赖
-
-- useCallback()是 useMemo() 函数类型的语法糖
-  useMemo(() => x => log(x), [n]);
-  useMemo 缓存函数调用的结果,而useCallback 缓存函数本身。
-
-  使用 useCallback 缓存函数仅在少数情况下有意义
-  - 将其作为 props 传递给包装在 [memo] 中的组件。
-  - 传递的函数可能作为某些 Hook 的依赖。
-
-- useReducer(reducer, initialArg, init?) => [state, dispatch]
-  init(initialArg)
-  dispatch(action) => void
-  reducer(currentState, action) => nextState
-  react 将批量更新状态来防止在一次事件循环中多次重新渲染，若要提前渲染，需要调用`flushSync()`。
-
-  useReducer()与 useState()非常类似，但是它将组件的状态更新逻辑抽离到组件外。
-  state 是只读的，不能直接修改对象或数组型的 state。
-
-## useEffectEvent
-
-  useEffectEvent 可以提取非响应式逻辑到EffectEvent中, 从而避免在useEffect的指定依赖。 只能把它用在`不需要变成响应式`的代码上。Effect Event 是 Effect 代码的非响应式“片段”。
-
-  使用局限性:
-    - 只在 Effect 内部调用他们。
-    - 永远不要把它们传给其他的组件或者 Hook。
-
-  事件处理程序与Effect分离总结
-    - 事件处理函数在响应特定交互时运行。
-    - Effect 在需要同步的时候运行。
-    - 事件处理函数内部的逻辑是非响应式的。
-    - Effect 内部的逻辑是响应式的。
-    - 可以将非响应式逻辑从 Effect 移到 Effect Event 中。
-    - 只在 Effect 内部调用 Effect Event。
-    - 不要将 Effect Event 传给其他组件或者 Hook。
-
-lazy(load) 第一次被渲染之前延迟加载组件的代码
-load: 一个返回 Promise 或另一个 thenable（具有 then 方法的类 Promise 对象）的函数。返回的 Promise 和 Promise 的解析值都将被缓存，因此 React 不会多次调用 load 函数。如果 Promise 被拒绝，则 React 将抛出拒绝原因给最近的错误边界处理。
-
-useImperativeHandle(ref, createHandle, dependencies?) 自定义由 ref 暴露出来的句柄。
-
-如果可以通过 prop 实现，那就不应该使用 ref。
-
-useInsertionEffect(setup, dependencies?) 在布局副作用触发之前将元素插入到 DOM 中
-
-- 不能在insertionEffect中更新状态，访问ref。
-- insertionEffect的执行可能在DOM更新之前也可能在之后。
-- useInsertionEffect中的setup和cleanup可能交错执行。
-
-CSS-in-JS 三种常见的实现方法：
-
-- 使用编译器静态提取到 CSS 文件
-- 内联样式，例如 <div style={{ opacity: 1 }}>
-- 运行时注入 <style> 标签
-
-一般建议采用前两种方式（静态样式使用 CSS 文件，动态样式使用内联样式）
-
-采用运行时注入 <style> 标签可能会有一下问题：
-
-- 运行时注入会使浏览器频繁地重新计算样式。
-- 如果在 React 生命周期中某个错误的时机进行运行时注入，它可能会非常慢。
-
-第一个问题无法解决，但是 useInsertionEffect 可以帮助你解决第二个问题。
-
-useTransition() 不阻塞 UI 的情况下更新状态
-
-- 传递给 startTransition 的函数`必须是同步`的
-- 标记为 transition 的状态更新可以被其他状态更新打断
-- transition 更新不能用于控制文本输入。
-
-## 重要问题
-
-1. 全局变量或可变值可以作为依赖项吗？
-  可变值（包括全局变量不是响应式的，如location.pathname这样的可变值不能作为依赖项。它是可变的，因此可以在 React 渲染数据流之外的任何时间发生变化。更改它不会触发组件的重新渲染。因此，即使在依赖项中指定了它，React也无法知道在其更改时重新同步Effect。这也违反了 React 的规则，因为在渲染过程中读取可变数据（即在计算依赖项时）会破坏纯粹的渲染。相反，应该使用 useSyncExternalStore 来读取和订阅外部可变值。
-  另外，像 ref.current 或从中读取的值也不能作为依赖项。useRef 返回的 ref 对象本身可以作为依赖项，但其 current 属性是有意可变的。它允许 跟踪某些值而不触发重新渲染。但由于更改它不会触发重新渲染，它不是响应式值，React 不会知道在其更改时重新运行 Effect。
-
-## 移除 Effect 依赖
-
-Effect依赖应该是Effect中使用到响应式值，如state、props等，每个被 Effect 所使用的响应式值，必须在依赖中声明。其依赖由Effect中代码决定。
-响应式值 包括 props 以及所有你直接在组件中声明的变量和函数。
-不必要的依赖可能会导致 Effect 运行过于频繁，甚至产生无限循环。
-
-- 在不同的条件下重新执行 Effect 的 不同部分
-- 只读取某个依赖的 最新值，而不是对其变化做出“反应”
-- 依赖可能会因为它的类型是对象或函数而 无意间 改变太频繁。
-
-总结:
-
-- 依赖应始终与代码匹配。
-- 避免抑制 linter。要移除依赖，需要向 linter “证明”它不是必需的。
-- 如果某些代码是为了响应特定交互，请将该代码移至事件处理的地方。
-- 如果 Effect 的不同部分因不同原因需要重新运行，应将其拆分为多个 Effect。
-- 如果想根据以前的状态更新一些状态，传递一个更新函数。
-- 如果想读取最新值而不“反应”它，应从 Effect 中提取出一个 Effect Event。
-- 尽量避免对象和函数依赖。将它们移到组件外或 Effect 内。
-
-内置组件
-
-- Fragement `<></>` 允许在不添加额外节点的情况下将子元素组合。
-- 当要从 <><Child /></> 转换为  [<Child />] 或 <><Child /></> 转换为 <Child />，React 并不会重置 state。仅只在一层深度的情况下生效。
-- Fragment 作用很大，它与将元素包裹在一个 DOM 容器中不同，使用 Fragment 对元素进行组合后不会影响布局和样式。
-- 如果要传递 key 给一个 <Fragment>，不能使用 <>...</>，必须从 'react' 中导入 Fragment 且表示为<Fragment key={yourKey}>...</Fragment>
-
-StrictMode
-
-- 组件将`重新渲染一次`，以查找由于非纯渲染而引起的错误。
-- 组件将`重新运行 Effect 一次`，以查找由于缺少 Effect 清理而引起的错误。
-- 组件将被`检查是否使用了已弃用的 API`。
-
-在由 <StrictMode> 包裹的树中，无法选择退出严格模式。
-
-严格模式 在开发环境中会调用一些函数两次（仅限应为纯函数的函数）。这些函数包括：
-
-- 组件函数体（仅限顶层逻辑，不包括事件处理程序内的代码）
-- 传递给 useState、set 函数、useMemo 或 useReducer 的函数。
-- 部分类组件的方法，例如 constructor、render、shouldComponentUpdate 等（请参阅完整列表）。
-
-Suspense
-允许在子组件完成加载前展示后备方案。
-
-只有启用了 Suspense 的数据源才会激活 Suspense 组件，它们包括：
-
-- 支持 Suspense 的框架如 Relay 和 Next.js。
-- 使用 lazy 懒加载组件代码。
-- 使用 use 读取 Promise 的值。
-
-Suspense 无法 检测在 Effect 或事件处理程序中获取数据的情况。
-加载数据的组件不必是 Suspense 边界的直接子组件。
-Suspense 边界允许协调 UI 的哪些部分应该总是一起“浮现”，以及哪些部分应该按照加载状态的序列逐步显示更多内容。可以在树的任何位置添加、移动或删除 Suspense 边界，而不会影响应用程序的其余的行为。不要在每个组件周围都放置 Suspense 边界。
-
-延迟值和 transition 都可以让你避免显示 Suspense 后备方案，而是使用内联指示器。transition 将整个更新标记为非紧急的，因此它们通常由框架和路由库用于导航。另一方面，延迟值在你希望将 UI 的一部分标记为非紧急，并让它“落后于” UI 的其余部分时非常有用。
-
-React 只会在非紧急更新期间阻止不必要的后备方案。这意味着它不会阻止紧急更新的 fallback。你必须使用 startTransition 或 useDeferredValue 这样的 API 来选择性的优化。
-
-如果你的路由集成了 Suspense，它将会自动将更新包装到 startTransition 中。
-
-## 自定义Hooks
-
-自定义 Hook 共享的是状态逻辑，而不是状态本身。对 Hook 的每个调用完全独立于对同一个 Hook 的其他调用。
-每当组件重新渲染，自定义 Hook 中的代码就会重新运行。
-好的自定义 Hook 通过限制功能使代码调用更具声明性。
-
-## 单向数据流
-
-数据向下流动，事件向上流动
-
-需要显式定义事件修改数据
-可以避免用户交互的复杂性和错误。
-
-双向数据流
-方便，组件的数据可以由父组件修改，组件内部的更改可以直接影响父组件中的数据。增加了用户交互理解的复杂性和出错的可能性。
-数据更新来源不清晰
-
-React API变更
-
-- 删除contextTypes and getChildContext v16.6.0 2018
-- 删除字符型Ref v16.3.0 2018
-- 删除Module pattern factories v16.9.0 2019
-- Removed: React.createFactory v16.13.0 2020
