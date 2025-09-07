@@ -118,6 +118,17 @@ setUser(prev => ({ ...prev, name: 'John' }));
 - 不要在渲染期间调用 setState（除非提前 return）
 - setter 函数是稳定的
 - 可用 flushSync 强制同步更新
+- set函数仅更新下一次渲染的状态变量。如果在调用set函数后立即读取状态变量，仍然会得到旧的值。
+- 如果提供的新值与旧值相同，setState 不会触发重新渲染。
+- 不要在渲染期间调用setState, 除非提前return,否则会导致死循环。
+- 每次调用 useState 都会返回独立的 state，不会相互影响。
+- 不要依赖闭包中的 state 值，使用函数式更新。
+- setState 是异步的，React 可能会批量合并多次 setState 调用。
+- setState 不会自动合并对象，需要手动合并。
+- 初始值函数只会在首次渲染时执行一次。
+- 可以多次使用 useState 管理多个状态。
+- 通过改变组件的 key，可以重置 state。
+- set函数具有稳定的标识，在Effect依赖数组中可以安全省略。
 
 ### useReducer(reducer, initialArg, init?)
 

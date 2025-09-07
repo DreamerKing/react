@@ -1,16 +1,21 @@
-import React from "react";
+import { StrictMode } from "react";
+import { BrowserRouter, Routes, Route } from 'react-router';
 import { createRoot } from "react-dom/client";
-// import App from "./views/VTable";
-// import Root from './Root';
-import ZApp from './zustand/ZApp';
+import Root from './Root';
+import UseActionState from './views/hooks/UseActionState';
 
 import "./style.css";
 
 const root = createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
-  <React.StrictMode>
-     <ZApp />
-  </React.StrictMode>
+  <StrictMode>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Root />} />
+        <Route path="/use-action-state" element={<UseActionState />} />
+      </Routes>
+    </BrowserRouter>
+  </StrictMode>
 );
 
