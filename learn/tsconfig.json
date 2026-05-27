@@ -1,11 +1,12 @@
 {
   "files": [],
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/**"],
-      "@hooks/*": ["src/hooks/**"],
-      "/#/*": ["types/*"]
-    },
+      "@/*": ["./src/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "#/*": ["./types/*"]
+    }
   },
   "references": [
     { "path": "./tsconfig.app.json" },
