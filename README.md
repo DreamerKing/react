@@ -8,10 +8,10 @@
 | --- | --- | --- |
 | [`learn/`](./learn/) | **主学习项目** — Hooks、Router、状态管理、可视化等 Demo | 活跃维护 |
 | [`doc/`](./doc/) | 学习笔记与速查文档 | 活跃维护 |
-| [`react-hooks/`](./react-hooks/) | Hooks 专项练习（独立 Git 仓库） | 参考 |
-| [`react-hooks-in-action/`](./react-hooks-in-action/) | 《React Hooks in Action》书籍配套代码 | 参考 |
-| [`react-js-foundations/`](./react-js-foundations/) | 《React JS Foundations》书籍配套代码 | 参考 |
-| [`professional-reactjs/`](./professional-reactjs/) | Professional React 课程配套代码 | 参考 |
+| [`react-hooks/`](./react-hooks/) | Hooks 专项练习 | [wxz6289/react-hooks](https://github.com/wxz6289/react-hooks) |
+| [`react-hooks-in-action/`](./react-hooks-in-action/) | 《React Hooks in Action》书籍配套代码 | [wxz6289/react-hooks-in-action](https://github.com/wxz6289/react-hooks-in-action) |
+| [`react-js-foundations/`](./react-js-foundations/) | 《React JS Foundations》书籍配套代码 | [wxz6289/react-js-foundations](https://github.com/wxz6289/react-js-foundations) |
+| [`professional-reactjs/`](./professional-reactjs/) | Professional React 课程配套代码 | [wxz6289/professional-reactjs](https://github.com/wxz6289/professional-reactjs) |
 | [`pro-react-admin-main/`](./pro-react-admin-main/) | 企业级 Admin 模板（第三方，Webpack + Ant Design） | 参考 |
 
 ## 快速开始
